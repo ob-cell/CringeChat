@@ -1,34 +1,25 @@
-<!DOCTYPE html>
-<!-- beginning of the code (sirJack)-->
-<html>
-  <head>
-    <title>CringeChat | Main page</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <style>
-    body {
-      background-color: #202020;
-      color: white;
-      font-family: arial, sans-serif;
-    }
-    .btn-1 {
-  background-color: white;
-  border: none;
-  color: black;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
+<!DOCTYPE html> 
+<html lang="en"> 
+<head> 
+<link rel="stylesheet" href="https://unpkg.com/xp.css" >
+<style>
+.chat-box {
+  color: blue;
+  border: 3px solid #ccc;
+  border-radius: 5px;
+  margin: 20px auto;
+  max-width: 600px;
+  padding: 10px;
 }
-footer {
-  background-color: grey;
-  color: white;
-  bottom: 0;
+
+.header {
+  background-color: blue;
+  border-bottom: 1px solid #ccc;
+  border-radius: 1px 1px 0 0;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 3px;
+  text-align: center;
 }
 body {
    background-color: black;
@@ -39,33 +30,49 @@ body {
 a {
   text-decoration: none;
 }
-    </style>
-    <!-- Everything related to the main page 👍-->
-    <!-- Title -->
-    <center><img src="src/img/3.png" width="40%" height="40%">
-    <hr>
-    </center>
-    <center><h1>CringeChat V0.0.0a5 &#9889;</h1></center>
-    <center><p>Welcome to <b style="color:#AAFF00">CringeChat</b>, Talk with people <b style="color:#d4ebf2">Around the world!</b> </p></center>
-    <br>
-    <br>
-    <center><button type="button" class="btn-1"hr href="/chat.html"><a href="chat.html">Enter The Chat</a></button></center>
-    <br>
-    <br>
 
-   <center><p style="color:#d4ebf2">by clicking to the button, you accept our <a href="rules.html">chat rules</a></p></center>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <footer>
-    <center><img src="src/img/4.png" width="5%" height="5%">
+</style>
+<meta charset="UTF-8" /> 
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<center><img src="src/img/3.png" width="45%" height="45%">
     </center>
-    <center><p style="color: black">Made with ❤ by the <b>NA team</b></p></center>
-    </footer>
-  </body>
-</html>
+<title>CringeChat | English chat </title> 
+</head>
+<body>
+</script>
+</center>
+  <div class="chat-box">
+     <div style="color: white" class="header">CringeChat V0.0.0a5 </div>
+   <div id="chat" style="height: 300px; overflow-y: scroll;">
+      <ul style="color: white;" id="messages">
+      <span class="message-time"></span> 
+      </ul> 
+
+      </div> 
+      </div>
+           <center><form id="send-message"> <input id="chat-txt" type="text" size="50" required/> <button id="chat-btn" type="submit" value="PLAY" onclick="play()">Submit</button>
+           
+
+           </form> </center>
+<audio id="audio" src="msn.mp3"></audio>
+           <hr>
+           <br>
+           <center><a href="index.html">Take me Back To the Main Menu</a></center>
+      <center><img src="src/img/1.png" width="45%" height="45%">
+    </center>
+      <center><p1 style="color: white; font-size: 20px;">Real Time Chat added! 📖</p1>
+      <li style="color: white"> Now you can chat with everyone around the world! but first, make sure to read our <a href="rules.html">chat rules</a></li></center>
+    <center><h1 style="color: white; font-size: 20px">20/3/2023 <b style="color: green; font-size: 20px"> >>></b>New GUI!</h1></center>
+      <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script> 
+      <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script> 
+      <script src="script.js">
+      </script>
+      <script> 
+      function play() 
+      { 
+        var audio = document.getElementById("audio"); 
+      audio.play();
+      }
+      </script>
+      </body> 
+      </html>
