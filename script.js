@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig); 
 const db = firebase.database();
 
-const username = prompt("What's your name?");
+const username = prompt("What's your username oomf?");
 
 document.getElementById("send-message").addEventListener("submit", postChat); function postChat(e) 
 { e.preventDefault();
