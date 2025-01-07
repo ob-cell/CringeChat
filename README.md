@@ -1,2 +1,2 @@
 # CringeChat
-Cringe chat, For people who like memes and chatting 😼
+Cringe chat, For people who like memes and chatting 
