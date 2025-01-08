@@ -1,7 +1,7 @@
-<!DOCTYPE html> 
-<html lang="en"> 
-<head> 
-<link rel="stylesheet" href="https://unpkg.com/xp.css" >
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="stylesheet" href="https://unpkg.com/xp.css">
 <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon">
 <link rel="icon" href="/favicon.ico" type="image/x-icon">
 <style>
@@ -23,64 +23,64 @@
   padding: 3px;
   text-align: center;
 }
+
 body {
-   background-color: black;
+  background-color: black;
   font-family: arial, sans-serif;
   font-size: 16px;
-  
 }
+
 a {
   text-decoration: none;
 }
+
 h1 {
   color: white;
   font-size: 18px;
 }
+
 p1 {
   color: white;
   font-size: 18px;
 }
 </style>
-<meta charset="UTF-8" /> 
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<center><img src="src/img/logo.png" width="45%" height="45%">
-    </center>
-<title>CringeChat</title> 
+<center><img src="src/img/logo.png" width="45%" height="45%"></center>
+<title>CringeChat</title>
 </head>
 <body>
+<script>
+function scrollDownChat() {
+  var chatContainer = document.getElementById("chat");
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 </script>
-</center>
+<center>
   <div class="chat-box">
-     <div style="color: white" class="header">CringeChat V0.0.0a7 </div>
-   <div id="chat" style="height: 300px; overflow-y: scroll;">
+    <div style="color: white" class="header">CringeChat V0.0.0a7 </div>
+    <div id="chat" style="height: 300px; overflow-y: scroll;">
       <ul style="color: white;" id="messages">
-      <span class="message-time"></span> 
-      </ul> 
-
-      </div> 
-      </div>
-           <center><form id="send-message"> <input id="chat-txt" type="text" size="50" autocomplete="off" required/> <button id="chat-btn" type="submit" value="PLAY" onclick="play()">Submit</button>
-           
-
-           </form> </center>
-<audio id="audio" src="msn.mp3"></audio>
-           <hr>
-           <br>
-           <center><h1>What is <b style="color:green;">CringeChat?</b></h1></center>
-           <center><p1>A shitty chat app made by <a href="https://www.twitter.com/mrfromalgeria">MrfromAlgeria</a> 3 years ago on my phone in under an hour,<br> Follow <a href="https://firebase.google.com/terms" style="color:yellow">Firebase</a>'s TOS</p1></center>
-           <br>
-            <center><img src="src/img/sharks.png" width="15%" height="15%"></center>
-            <center><p><i>Kboo's Sharkies</i></p></center>
-      <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script> 
-      <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script> 
-      <script src="script.js">
-      </script>
-      <script> 
-      function play() 
-      { 
-        var audio = document.getElementById("audio"); 
-      audio.play();
-      }
-      </script>
-      </body> 
-      </html>
+        <span class="message-time"></span>
+      </ul>
+    </div>
+    <center><form id="send-message">
+      <input id="chat-txt" type="text" size="50" autocomplete="off" required/>
+      <button id="chat-btn" type="submit" value="PLAY" onclick="play(); scrollDownChat()">Submit</button>
+    </form></center>
+    <audio id="audio" src="msn.mp3"></audio>
+    <hr>
+    <br>
+    <center><h1>What is <b style="color:green;">CringeChat?</b></h1></center>
+    <center><p1>A shitty chat app made by <a href="https://www.twitter.com/mrfromalgeria">MrfromAlgeria</a> 3 years ago on my phone in under an hour,<br> Follow <a href="https://firebase.google.com/terms" style="color:yellow">Firebase</a>'s TOS</p1></center>
+    <br>
+    <center><img src="src/img/sharks.png" width="15%" height="15%"></center>
+    <center><p><i>Kboo's Sharkies</i></p></center>
+  </div>
+</center>
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+<script src="script.js">
+</script>
+</body>
+</html>
