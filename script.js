@@ -13,9 +13,11 @@ const db = firebase.database();
 
 const usernames = new Set();
 const storedUsername = localStorage.getItem('username');
+const storedColor = localStorage.getItem('coloredUsername');
 const username = storedUsername ? storedUsername : prompt("What's your username oomf?");
 localStorage.setItem('username', username);
-const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+const randomColor = storedColor ? storedColor : '#' + Math.floor(Math.random()*16777215).toString(16);
+localStorage.setItem('coloredUsername', randomColor);
 const coloredUsername = `<span style="color:${randomColor}">${username} (${randomColor})</span>`;
 
 document.getElementById("send-message").addEventListener("submit", postChat); 
@@ -44,7 +46,6 @@ function postChat(e) {
         thumbs_up: "👍",
         skull: "☠️",
         skull_2: "💀",
-        
       };
       return emojiMap[emojiName] || match;
     });
