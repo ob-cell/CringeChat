@@ -48,7 +48,8 @@ function postChat(e) {
         skull_2: "💀",
       };
       return emojiMap[emojiName] || match;
-    });
+    })
+    .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
 
   if (message === "!help") {
     db.ref("messages/" + timestamp).set({ 
