@@ -11,11 +11,32 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig); 
 const db = firebase.database();
 
-const username = prompt("What's your username oomf?");
-const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+const usernames = new Set();
+const storedUsername = localStorage.getItem('username');
+const storedColor = localStorage.getItem('color');
+
+let username;
+let randomColor;
+
+if (storedUsername && storedColor) {
+  username = storedUsername;
+  randomColor = storedColor;
+} else {
+  username = prompt("What's your username oomf?");
+  randomColor = '#' + Math.floor(Math.random()*16777215).toString(16);
+  localStorage.setItem('username', username);
+  localStorage.setItem('color', randomColor);
+}
+
 const coloredUsername = `<span style="color:${randomColor}">${username} (${randomColor})</span>`;
 
 document.getElementById("send-message").addEventListener("submit", postChat); 
+document.getElementById("chat-txt").addEventListener("input", () => {
+  if (!usernames.has(username)) {
+    usernames.add(username);
+  }
+  updateTypingNotification();
+});
 
 function postChat(e) { 
   e.preventDefault();
@@ -24,6 +45,21 @@ function postChat(e) {
   const message = chatTxt.value; 
   chatTxt.value = ""; 
   
+  const formattedMessage = message
+    .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+    .replace(/\*(.*?)\*/g, "<i>$1</i>")
+    .replace(/__(.*?)__/g, "<u>$1</u>")
+    .replace(/:(\w+):/g, (match, emojiName) => {
+      const emojiMap = {
+        heart: "❤️",
+        smile: "😊",
+        thumbs_up: "👍",
+        skull: "☠️",
+        skull_2: "💀",
+      };
+      return emojiMap[emojiName] || match;
+    });
+
   if (message === "!help") {
     db.ref("messages/" + timestamp).set({ 
       usr: "sYs (bot)",
@@ -32,10 +68,12 @@ function postChat(e) {
   } else {
     db.ref("messages/" + timestamp).set({ 
       usr: coloredUsername,
-      msg: message, 
+      msg: formattedMessage, 
     }); 
   }
 
+  usernames.clear();
+  updateTypingNotification();
   scrollToBottom();
 }
 
@@ -50,4 +88,19 @@ fetchChat.on("child_added", function (snapshot) {
 function scrollToBottom() {
   const chatBox = document.querySelector(".chat");
   chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function updateTypingNotification() {
+  const typingArea = document.getElementById("typing-notification");
+  if (usernames.size === 0) {
+    typingArea.innerHTML = "";
+    return;
+  }
+  if (usernames.size === 1) {
+    typingArea.innerHTML = `<small>${Array.from(usernames)[0]} is typing...</small>`;
+  } else if (usernames.size === 2) {
+    typingArea.innerHTML = `<small>${Array.from(usernames).join(", ")} are typing...</small>`;
+  } else {
+    typingArea.innerHTML = `<small>Several users are typing...</small>`;
+  }
 }
