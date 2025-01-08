@@ -13,6 +13,13 @@ const db = firebase.database();
 
 const username = prompt("What's your username oomf?");
 
+let username = getCookie('username');
+
+if (!username) {
+  username = prompt("What's your username oomf?");
+  setCookie('username', username, 7); // Store username for 7 days
+}
+
 document.getElementById("send-message").addEventListener("submit", postChat); function postChat(e) 
 { e.preventDefault();
 const timestamp = Date.now(); 
