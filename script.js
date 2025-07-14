@@ -13,38 +13,16 @@ const db = firebase.database();
 
 const usernames = new Set();
 
-const backgroundMusic = document.getElementById("background-music");
-let isMusicPlaying = false;
-
-function tryPlayBackgroundMusic() {
-    if (backgroundMusic && !isMusicPlaying) {
-        backgroundMusic.volume = 0.1;
-        backgroundMusic.muted = true;
-        const playPromise = backgroundMusic.play();
-
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                backgroundMusic.muted = false;
-                isMusicPlaying = true;
-            }).catch(error => {
-                isMusicPlaying = false;
-                backgroundMusic.muted = false;
-            });
-        }
-    }
-}
 
 let username = localStorage.getItem('username');
 while (!username || username.trim() === "") {
     username = prompt("What's your username oomf?");
     if (username) {
         username = username.trim();
-        tryPlayBackgroundMusic(); // Attempt to play music after user interaction
+        
     }
 }
 localStorage.setItem('username', username);
-
-tryPlayBackgroundMusic(); // Also try playing it immediately if username is already set, might work on some browsers.
 
 let randomColor = localStorage.getItem('coloredUsername');
 if (!randomColor) {
