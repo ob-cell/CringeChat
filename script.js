@@ -24,7 +24,6 @@ localStorage.setItem('username', username);
 
 let randomColor = localStorage.getItem('coloredUsername');
 if (!randomColor) {
-  // THIS IS THE FIX: Pad the hex string with leading zeros to ensure it's 6 characters long
   randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0');
   localStorage.setItem('coloredUsername', randomColor);
 }
@@ -75,6 +74,7 @@ function postChat(e) {
 
   usernames.clear();
   updateTypingNotification();
+  // Call scrollToBottom after sending a message
   scrollToBottom();
 }
 
