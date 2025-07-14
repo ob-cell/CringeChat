@@ -11,6 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig); 
 const db = firebase.database();
 
+prompt("What's your username oomf?");
 const usernames = new Set();
 const storedUsername = localStorage.getItem('username');
 const storedColor = localStorage.getItem('coloredUsername');
