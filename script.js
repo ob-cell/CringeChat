@@ -105,3 +105,23 @@ function updateTypingNotification() {
     typingArea.innerHTML = `<small>Several users are typing...</small>`;
   }
 }
+// Music functionality
+const backgroundMusic = document.getElementById("background-music");
+
+// Function to play music with a low volume
+function playBackgroundMusic() {
+    if (backgroundMusic) {
+        backgroundMusic.volume = 0.1; // Sets the volume to 10%
+        backgroundMusic.play().catch(error => {
+            console.log("Autoplay prevented:", error);
+            
+        });
+    }
+}
+
+window.addEventListener('load', playBackgroundMusic);
+
+
+if (username) { 
+    playBackgroundMusic();
+          }
