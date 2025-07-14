@@ -8,20 +8,28 @@ const firebaseConfig = {
   appId: "1:1078798953034:web:78081799548359f3e294b3",
   measurementId: "G-FGHETW90V3"
 };
-firebase.initializeApp(firebaseConfig); 
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-prompt("What's your username oomf?");
 const usernames = new Set();
-const storedUsername = localStorage.getItem('username');
-const storedColor = localStorage.getItem('coloredUsername');
-const username = storedUsername ? storedUsername : prompt("What's your username oomf?");
-localStorage.setItem('username', username);
-const randomColor = storedColor ? storedColor : '#' + Math.floor(Math.random()*16777215).toString(16);
-localStorage.setItem('coloredUsername', randomColor);
-const coloredUsername = `<span style="color:${randomColor}">${username} (${randomColor})</span>`;
 
-document.getElementById("send-message").addEventListener("submit", postChat); 
+let username = localStorage.getItem('username');
+while (!username || username.trim() === "") {
+  username = prompt("What's your username oomf?");
+  if (username) {
+      username = username.trim();
+  }
+}
+localStorage.setItem('username', username);
+
+let randomColor = localStorage.getItem('coloredUsername');
+if (!randomColor) {
+  randomColor = '#' + Math.floor(Math.random() * 16777215).toString(16);
+  localStorage.setItem('coloredUsername', randomColor);
+}
+const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
+
+document.getElementById("send-message").addEventListener("submit", postChat);
 document.getElementById("chat-txt").addEventListener("input", () => {
   if (!usernames.has(username)) {
     usernames.add(username);
@@ -29,13 +37,13 @@ document.getElementById("chat-txt").addEventListener("input", () => {
   updateTypingNotification();
 });
 
-function postChat(e) { 
+function postChat(e) {
   e.preventDefault();
-  const timestamp = Date.now(); 
+  const timestamp = Date.now();
   const chatTxt = document.getElementById("chat-txt");
-  const message = chatTxt.value; 
-  chatTxt.value = ""; 
-  
+  const message = chatTxt.value;
+  chatTxt.value = "";
+
   const formattedMessage = message
     .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
     .replace(/\*(.*?)\*/g, "<i>$1</i>")
@@ -53,15 +61,15 @@ function postChat(e) {
     .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
 
   if (message === "!help") {
-    db.ref("messages/" + timestamp).set({ 
+    db.ref("messages/" + timestamp).set({
       usr: "sYs (bot)",
-      msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs" 
+      msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs"
     });
   } else {
-    db.ref("messages/" + timestamp).set({ 
-      usr: coloredUsername,
-      msg: formattedMessage, 
-    }); 
+    db.ref("messages/" + timestamp).set({
+      usr: coloredUsernameHtml,
+      msg: formattedMessage,
+    });
   }
 
   usernames.clear();
@@ -69,11 +77,11 @@ function postChat(e) {
   scrollToBottom();
 }
 
-const fetchChat = db.ref("messages/"); 
-fetchChat.on("child_added", function (snapshot) { 
-  const messages = snapshot.val(); 
-  const msg = "<li>" + messages.usr + " : " + messages.msg + "</li>";
-  document.getElementById("messages").innerHTML += msg; 
+const fetchChat = db.ref("messages/");
+fetchChat.on("child_added", function (snapshot) {
+  const messages = snapshot.val();
+  const msg = `<li>${messages.usr} : ${messages.msg}</li>`;
+  document.getElementById("messages").innerHTML += msg;
   scrollToBottom();
 });
 
