@@ -106,3 +106,26 @@ function updateTypingNotification() {
         typingArea.innerHTML = `<small>Several users are typing...</small>`;
     }
 }
+const customEmojiMap = {
+
+    "=)": "emojis/smiley.gif",
+    
+  };
+
+
+
+  for (const textEmoji in customEmojiMap) {
+
+    const imageUrl = customEmojiMap[textEmoji];
+
+    const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/:/g, '')}">`;
+
+    // Use a RegExp to replace all occurrences of the textEmoji
+
+    const regex = new RegExp(textEmoji.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'); // Escape special characters
+
+    formattedMessage = formattedMessage.replace(regex, imageTag);
+
+  }
+
+ 
