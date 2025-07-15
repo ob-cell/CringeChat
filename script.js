@@ -96,7 +96,7 @@ function updateTypingNotification() {
 }
 
 const customEmojiMap = {
-    "=\)": "emojis/smiley.gif",
+    ":smiley:": "emojis/smiley.gif",
 };
 
 for (const textEmoji in customEmojiMap) {
