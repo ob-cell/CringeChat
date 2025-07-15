@@ -12,14 +12,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const usernames = new Set();
-
+const typingUsers = new Set();
 
 let username = localStorage.getItem('username');
 while (!username || username.trim() === "") {
     username = prompt("What's your username oomf?");
     if (username) {
         username = username.trim();
-        
     }
 }
 localStorage.setItem('username', username);
@@ -31,129 +30,12 @@ if (!randomColor) {
 }
 const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
 
-document.getElementById("send-message").addEventListener("submit", postChat);
-document.getElementById("chat-txt").addEventListener("input", () => {
-    if (!usernames.has(username)) {
-        usernames.add(username);
-    }
-    updateTypingNotification();
-});
-
-function postChat(e) {
-    e.preventDefault();
-    const timestamp = Date.now();
-    const chatTxt = document.getElementById("chat-txt");
-    const message = chatTxt.value;
-    chatTxt.value = "";
-
-    const formattedMessage = message
-    
-        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
-
-    if (message === "!help") {
-        db.ref("messages/" + timestamp).set({
-            usr: "sYs (bot)",
-            msg: "<i style='color:gray'>someone used the !help command</i>U+0020 Hi, I'm sYs"
-        });
-    } else {
-        db.ref("messages/" + timestamp).set({
-            usr: coloredUsernameHtml,
-            msg: formattedMessage,
-        });
-    }
-
-    usernames.clear();
-    updateTypingNotification();
-    scrollToBottom();
-}
-
-const fetchChat = db.ref("messages/");
-fetchChat.on("child_added", function (snapshot) {
-    const messages = snapshot.val();
-    const msg = `<li>${messages.usr} : ${messages.msg}</li>`;
-    document.getElementById("messages").innerHTML += msg;
-    scrollToBottom();
-});
-
-function scrollToBottom() {
-    const chatBox = document.querySelector(".chat");
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-function updateTypingNotification() {
-    const typingArea = document.getElementById("typing-notification");
-    if (usernames.size === 0) {
-        typingArea.innerHTML = "";
-        return;
-    }
-    if (usernames.size === 1) {
-        typingArea.innerHTML = `<small>${Array.from(usernames)[0]} is typing...</small>`;
-    } else if (usernames.size === 2) {
-        typingArea.innerHTML = `<small>${Array.from(usernames).join(", ")} are typing...</small>`;
-    } else {
-        typingArea.innerHTML = `<small>Several users are typing...</small>`;
-    }
-}
-
-const customEmojiMap = {
-    ":smiley:": "emojis/smiley.gif",
-};
-
-for (const textEmoji in customEmojiMap) {
-    const imageUrl = customEmojiMap[textEmoji];
-    const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/\\/g, '')}">`;
-    const regex = new RegExp(textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
-    formattedMessage = formattedMessage.replace(regex, imageTag);
-}
-
 const typingRef = firebase.database().ref('typing');
-
-let typingTimeout;
-
-
-
-document.getElementById("chat-txt").addEventListener("input", () => {
-
-    typingRef.child(username).set(true);
-
-    clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-
-        typingRef.child(username).remove();
-
-    }, 2000);
-
-});
-
-
-
-function postChat(e) {
-  e.preventDefault();
-  const timestamp = Date.now();
-  const chatTxt = document.getElementById("chat-txt");
-  const message = chatTxt.value;
-  chatTxt.value = "";
-
-
-
-  clearTimeout(typingTimeout);
-  typingRef.child(username).remove();
-
-
-
-  usernames.clear();
-  updateTypingNotificationDisplay();
-  scrollToBottom();
-
-}
-
-
-
-const typingRef = firebase.database().ref('typing');
+const typingNotificationArea = document.getElementById("typing-notification");
 let typingTimeout;
 let messageSendTimeout;
 
+document.getElementById("send-message").addEventListener("submit", postChat);
 document.getElementById("chat-txt").addEventListener("input", () => {
     typingRef.child(username).set(true);
     clearTimeout(typingTimeout);
@@ -172,30 +54,74 @@ document.getElementById("chat-txt").addEventListener("input", () => {
 });
 
 function postChat(e) {
-  e.preventDefault();
+    e.preventDefault();
+    clearTimeout(typingTimeout);
+    clearTimeout(messageSendTimeout);
 
-  clearTimeout(typingTimeout);
-  clearTimeout(messageSendTimeout);
+    const timestamp = Date.now();
+    const chatTxt = document.getElementById("chat-txt");
+    const message = chatTxt.value;
+    chatTxt.value = "";
 
-  const chatTxt = document.getElementById("chat-txt");
-  typingRef.child(username).remove();
+    typingRef.child(username).remove();
 
-  
-  if (chatTxt.value.trim() !== "") {
-      const timestamp = Date.now();
-      db.ref("messages/" + timestamp).set({
-          usr: coloredUsernameHtml,
-          msg: chatTxt.value,
-      });
-      chatTxt.value = "";
-      scrollToBottom();
-  }
+    let formattedMessage = message
+        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
+        .replace(/\*(.*?)\*/g, "<i>$1</i>")
+        .replace(/__(.*?)__/g, "<u>$1</u>")
+        .replace(/:(\w+):/g, (match, emojiName) => {
+            const emojiMap = {
+                heart: "❤️",
+                smile: "😊",
+                thumbs_up: "👍",
+                skull: "☠️",
+                skull_2: "💀",
+            };
+            return emojiMap[emojiName] || match;
+        })
+        .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
 
-  updateTypingNotificationDisplay();
+    const customEmojiMap = {
+        "=\)": "emojis/smiley.gif",
+        ":smiley:": "emojis/smiley.gif",
+    };
+
+    for (const textEmoji in customEmojiMap) {
+        const imageUrl = customEmojiMap[textEmoji];
+        const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/\\/g, '')}">`;
+        const regex = new RegExp(textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+        formattedMessage = formattedMessage.replace(regex, imageTag);
+    }
+
+    if (message === "!help") {
+        db.ref("messages/" + timestamp).set({
+            usr: "sYs (bot)",
+            msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs"
+        });
+    } else {
+        db.ref("messages/" + timestamp).set({
+            usr: coloredUsernameHtml,
+            msg: formattedMessage,
+        });
+    }
+
+    usernames.clear();
+    updateTypingNotificationDisplay();
+    scrollToBottom();
 }
 
-const typingUsers = new Set();
-const typingNotificationArea = document.getElementById("typing-notification");
+const fetchChat = db.ref("messages/");
+fetchChat.on("child_added", function (snapshot) {
+    const messages = snapshot.val();
+    const msg = `<li>${messages.usr} : ${messages.msg}</li>`;
+    document.getElementById("messages").innerHTML += msg;
+    scrollToBottom();
+});
+
+function scrollToBottom() {
+    const chatBox = document.querySelector(".chat");
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 typingRef.on('child_added', function(snapshot) {
     const typingUsername = snapshot.key;
@@ -225,4 +151,4 @@ function updateTypingNotificationDisplay() {
             typingNotificationArea.innerHTML = `<small>${usersArray.join(', ')} and ${lastUser} are typing...</small>`;
         }
     }
-      }
+  }
