@@ -53,7 +53,6 @@ usersRef.on('child_added', function(snapshot) {
     if (joinedUsername !== username) { // Don't notify for self-join
         const timestamp = Date.now();
         db.ref("messages/" + timestamp).set({
-            usr: "sYs (bot)",
             msg: `<span style="color:green">${joinedUsername} joined the chat</span>`
         });
         joinSound.play().catch(e => console.error("Failed to play join sound:", e));
