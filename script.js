@@ -30,13 +30,36 @@ if (!randomColor) {
 const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
 
 const typingRef = firebase.database().ref('typing');
+// Reference for online users
+const usersRef = firebase.database().ref('users');
 
 const typingNotificationArea = document.getElementById("typing-notification");
 const backgroundMusicPlayer = document.getElementById("background-music-player");
 const musicSelector = document.getElementById("music-selector");
+// New audio element for join sound
+const joinSound = new Audio('sound/buddyin.mp3');
 
 let typingTimeout;
 let messageSendTimeout;
+
+// Set user as online and handle disconnect
+const userOnlineRef = usersRef.child(username);
+userOnlineRef.set(true); // Set user as online when they join
+userOnlineRef.onDisconnect().remove(); // Remove user from 'users' when they disconnect
+
+// Listen for new users joining
+usersRef.on('child_added', function(snapshot) {
+    const joinedUsername = snapshot.key;
+    if (joinedUsername !== username) { // Don't notify for self-join
+        const timestamp = Date.now();
+        db.ref("messages/" + timestamp).set({
+            usr: "sYs (bot)",
+            msg: `<span style="color:green">${joinedUsername} joined the chat</span>`
+        });
+        joinSound.play().catch(e => console.error("Failed to play join sound:", e));
+    }
+});
+
 
 document.getElementById("chat-txt").addEventListener("input", () => {
     typingRef.child(username).set(true);
@@ -169,4 +192,4 @@ function stopCurrentMusic() {
 function play() {
   var audio = document.getElementById("audio");
   audio.play();
-                                                       }
+}
