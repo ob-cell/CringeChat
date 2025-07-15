@@ -11,7 +11,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const usernames = new Set();
 const typingUsers = new Set();
 
 let username = localStorage.getItem('username');
@@ -30,31 +29,14 @@ if (!randomColor) {
 }
 const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
 
-const connectedRef = firebase.database().ref('.info/connected');
-const presenceRef = firebase.database().ref('presence');
 const typingRef = firebase.database().ref('typing');
 
-const onlineUsersDisplay = document.getElementById('online-users');
 const typingNotificationArea = document.getElementById("typing-notification");
 const backgroundMusicPlayer = document.getElementById("background-music-player");
 const musicSelector = document.getElementById("music-selector");
 
-
 let typingTimeout;
 let messageSendTimeout;
-
-connectedRef.on('value', function(snapshot) {
-    if (snapshot.val() === true) {
-        const userRef = presenceRef.child(username);
-        userRef.onDisconnect().remove();
-        userRef.set(true);
-    }
-});
-
-presenceRef.on('value', function(snapshot) {
-    const onlineCount = snapshot.numChildren();
-    onlineUsersDisplay.textContent = `Online: ${onlineCount}`;
-});
 
 document.getElementById("chat-txt").addEventListener("input", () => {
     typingRef.child(username).set(true);
@@ -64,7 +46,7 @@ document.getElementById("chat-txt").addEventListener("input", () => {
 
     typingTimeout = setTimeout(() => {
         typingRef.child(username).remove();
-    }, 3000); // Typing notification goes away after 3 seconds of inactivity
+    }, 3000);
 
     messageSendTimeout = setTimeout(() => {
         const chatTxtElement = document.getElementById("chat-txt");
@@ -120,35 +102,10 @@ function postChat(e) {
     typingRef.child(username).remove();
 
     let formattedMessage = message
-        .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
-        .replace(/\*(.*?)\*/g, "<i>$1</i>")
-        .replace(/__(.*?)__/g, "<u>$1</u>")
-        .replace(/:(\w+):/g, (match, emojiName) => {
-            const emojiMap = {
-                heart: "❤️",
-                smile: "😊",
-                thumbs_up: "👍",
-                skull: "☠️",
-                skull_2: "💀",
-            };
-            return emojiMap[emojiName] || match;
-        })
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
 
-    const customEmojiMap = {
-        "=\)": "emojis/smiley.gif",
-        ":smiley:": "emojis/smiley.gif",
-    };
-
-    for (const textEmoji in customEmojiMap) {
-        const imageUrl = customEmojiMap[textEmoji];
-        const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '')}">`;
-        const regex = new RegExp(textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
-        formattedMessage = formattedMessage.replace(regex, imageTag);
-    }
-
-    if (message.trim() === "") { // Don't send empty messages
-        updateTypingNotificationDisplay(); // Update typing display in case message was empty
+    if (message.trim() === "") {
+        updateTypingNotificationDisplay();
         return;
     }
 
@@ -156,25 +113,14 @@ function postChat(e) {
         db.ref("messages/" + timestamp).set({
             usr: "sYs (bot)",
             msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs"
-        }).then(() => {
-            // Optional: You could directly append the message here for immediate local display
-            // but relying on the 'child_added' listener is generally more consistent.
-        }).catch(error => {
-            console.error("Error sending help message:", error);
         });
     } else {
         db.ref("messages/" + timestamp).set({
             usr: coloredUsernameHtml,
             msg: formattedMessage,
-        }).then(() => {
-            // Optional: You could directly append the message here for immediate local display
-            // but relying on the 'child_added' listener is generally more consistent.
-        }).catch(error => {
-            console.error("Error sending user message:", error);
         });
     }
 
-    usernames.clear(); // Keep this for whatever local purpose it serves
     updateTypingNotificationDisplay();
     scrollToBottom();
 }
@@ -223,4 +169,4 @@ function stopCurrentMusic() {
 function play() {
   var audio = document.getElementById("audio");
   audio.play();
-          }
+                                                       }
