@@ -65,7 +65,7 @@ function postChat(e) {
     if (message === "!help") {
         db.ref("messages/" + timestamp).set({
             usr: "sYs (bot)",
-            msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs"
+            msg: "<i style='color:gray'>someone used the !help command</i>| Hi, I'm sYs"
         });
     } else {
         db.ref("messages/" + timestamp).set({
@@ -128,4 +128,19 @@ const customEmojiMap = {
 
   }
 
- 
+const connectedRef = firebase.database().ref('.info/connected');
+const presenceRef = firebase.database().ref('presence');
+const onlineUsersDisplay = document.getElementById('online-users');
+
+connectedRef.on('value', function(snapshot) {
+    if (snapshot.val() === true) {
+        const userRef = presenceRef.child(username);
+        userRef.onDisconnect().remove();
+        userRef.set(true);
+    }
+});
+
+onlineUsersRef.on('value', function(snapshot) {
+    const onlineCount = snapshot.numChildren();
+    onlineUsersDisplay.textContent = `Online: ${onlineCount}`;
+});
