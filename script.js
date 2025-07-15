@@ -12,14 +12,13 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const usernames = new Set();
-
+const typingUsers = new Set();
 
 let username = localStorage.getItem('username');
 while (!username || username.trim() === "") {
     username = prompt("What's your username oomf?");
     if (username) {
         username = username.trim();
-        
     }
 }
 localStorage.setItem('username', username);
@@ -31,22 +30,96 @@ if (!randomColor) {
 }
 const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
 
-document.getElementById("send-message").addEventListener("submit", postChat);
-document.getElementById("chat-txt").addEventListener("input", () => {
-    if (!usernames.has(username)) {
-        usernames.add(username);
+const connectedRef = firebase.database().ref('.info/connected');
+const presenceRef = firebase.database().ref('presence');
+const typingRef = firebase.database().ref('typing');
+
+const onlineUsersDisplay = document.getElementById('online-users');
+const typingNotificationArea = document.getElementById("typing-notification");
+const backgroundMusicPlayer = document.getElementById("background-music-player");
+const musicSelector = document.getElementById("music-selector");
+
+
+let typingTimeout;
+let messageSendTimeout;
+
+connectedRef.on('value', function(snapshot) {
+    if (snapshot.val() === true) {
+        const userRef = presenceRef.child(username);
+        userRef.onDisconnect().remove();
+        userRef.set(true);
     }
-    updateTypingNotification();
 });
+
+presenceRef.on('value', function(snapshot) {
+    const onlineCount = snapshot.numChildren();
+    onlineUsersDisplay.textContent = `Online: ${onlineCount}`;
+});
+
+document.getElementById("chat-txt").addEventListener("input", () => {
+    typingRef.child(username).set(true);
+
+    clearTimeout(typingTimeout);
+    clearTimeout(messageSendTimeout);
+
+    typingTimeout = setTimeout(() => {
+        typingRef.child(username).remove();
+    }, 3000); // Typing notification goes away after 3 seconds of inactivity
+
+    messageSendTimeout = setTimeout(() => {
+        const chatTxtElement = document.getElementById("chat-txt");
+        if (chatTxtElement.value.trim() !== "") {
+            postChat({ preventDefault: () => {} });
+        }
+    }, 10000);
+});
+
+typingRef.on('child_added', function(snapshot) {
+    const typingUsername = snapshot.key;
+    if (typingUsername !== username) {
+        typingUsers.add(typingUsername);
+    }
+    updateTypingNotificationDisplay();
+});
+
+typingRef.on('child_removed', function(snapshot) {
+    const typingUsername = snapshot.key;
+    typingUsers.delete(typingUsername);
+    updateTypingNotificationDisplay();
+});
+
+function updateTypingNotificationDisplay() {
+    if (typingUsers.size === 0) {
+        typingNotificationArea.innerHTML = "";
+    } else if (typingUsers.size === 1) {
+        typingNotificationArea.innerHTML = `<small>${Array.from(typingUsers)[0]} is typing...</small>`;
+    } else {
+        const usersArray = Array.from(typingUsers);
+        const lastUser = usersArray.pop();
+        if (usersArray.length === 0) {
+             typingNotificationArea.innerHTML = `<small>${lastUser} is typing...</small>`;
+        } else {
+            typingNotificationArea.innerHTML = `<small>${usersArray.join(', ')} and ${lastUser} are typing...</small>`;
+        }
+    }
+}
+
+document.getElementById("send-message").addEventListener("submit", postChat);
 
 function postChat(e) {
     e.preventDefault();
+
+    clearTimeout(typingTimeout);
+    clearTimeout(messageSendTimeout);
+
     const timestamp = Date.now();
     const chatTxt = document.getElementById("chat-txt");
     const message = chatTxt.value;
     chatTxt.value = "";
 
-    const formattedMessage = message
+    typingRef.child(username).remove();
+
+    let formattedMessage = message
         .replace(/\*\*(.*?)\*\*/g, "<b>$1</b>")
         .replace(/\*(.*?)\*/g, "<i>$1</i>")
         .replace(/__(.*?)__/g, "<u>$1</u>")
@@ -62,20 +135,47 @@ function postChat(e) {
         })
         .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" style="color:blue;">$1</a>');
 
+    const customEmojiMap = {
+        "=\)": "emojis/smiley.gif",
+        ":smiley:": "emojis/smiley.gif",
+    };
+
+    for (const textEmoji in customEmojiMap) {
+        const imageUrl = customEmojiMap[textEmoji];
+        const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '')}">`;
+        const regex = new RegExp(textEmoji.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'g');
+        formattedMessage = formattedMessage.replace(regex, imageTag);
+    }
+
+    if (message.trim() === "") { // Don't send empty messages
+        updateTypingNotificationDisplay(); // Update typing display in case message was empty
+        return;
+    }
+
     if (message === "!help") {
         db.ref("messages/" + timestamp).set({
             usr: "sYs (bot)",
-            msg: "<i style='color:gray'>someone used the !help command</i>| Hi, I'm sYs"
+            msg: "<i style='color:gray'>someone used the !help command</i> Hi, I'm sYs"
+        }).then(() => {
+            // Optional: You could directly append the message here for immediate local display
+            // but relying on the 'child_added' listener is generally more consistent.
+        }).catch(error => {
+            console.error("Error sending help message:", error);
         });
     } else {
         db.ref("messages/" + timestamp).set({
             usr: coloredUsernameHtml,
             msg: formattedMessage,
+        }).then(() => {
+            // Optional: You could directly append the message here for immediate local display
+            // but relying on the 'child_added' listener is generally more consistent.
+        }).catch(error => {
+            console.error("Error sending user message:", error);
         });
     }
 
-    usernames.clear();
-    updateTypingNotification();
+    usernames.clear(); // Keep this for whatever local purpose it serves
+    updateTypingNotificationDisplay();
     scrollToBottom();
 }
 
@@ -92,126 +192,35 @@ function scrollToBottom() {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function updateTypingNotification() {
-    const typingArea = document.getElementById("typing-notification");
-    if (usernames.size === 0) {
-        typingArea.innerHTML = "";
-        return;
-    }
-    if (usernames.size === 1) {
-        typingArea.innerHTML = `<small>${Array.from(usernames)[0]} is typing...</small>`;
-    } else if (usernames.size === 2) {
-        typingArea.innerHTML = `<small>${Array.from(usernames).join(", ")} are typing...</small>`;
+function loadAndPlaySelectedMusic() {
+    const selectedSong = musicSelector.value;
+    if (selectedSong) {
+        backgroundMusicPlayer.src = selectedSong;
+        backgroundMusicPlayer.load();
+        playCurrentMusic();
     } else {
-        typingArea.innerHTML = `<small>Several users are typing...</small>`;
+        backgroundMusicPlayer.pause();
+        backgroundMusicPlayer.src = "";
     }
 }
-const customEmojiMap = {
 
-    "=)": "emojis/smiley.gif",
-    
-  };
-
-
-
-  for (const textEmoji in customEmojiMap) {
-
-    const imageUrl = customEmojiMap[textEmoji];
-
-    const imageTag = `<img src="${imageUrl}" class="custom-emoji-img" alt="${textEmoji.replace(/:/g, '')}">`;
-
-    // Use a RegExp to replace all occurrences of the textEmoji
-
-    const regex = new RegExp(textEmoji.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'); // Escape special characters
-
-    formattedMessage = formattedMessage.replace(regex, imageTag);
-
-  }
-
-const typingRef = firebase.database().ref('typing');
-
-let typingTimeout;
-
-
-
-document.getElementById("chat-txt").addEventListener("input", () => {
-
-    typingRef.child(username).set(true);
-
-    clearTimeout(typingTimeout);
-
-    typingTimeout = setTimeout(() => {
-
-        typingRef.child(username).remove();
-
-    }, 2000);
-
-});
-
-
-
-function postChat(e) {
-  e.preventDefault();
-  const timestamp = Date.now();
-  const chatTxt = document.getElementById("chat-txt");
-  const message = chatTxt.value;
-  chatTxt.value = "";
-
-
-
-  clearTimeout(typingTimeout);
-  typingRef.child(username).remove();
-
-
-
-  usernames.clear();
-  updateTypingNotificationDisplay();
-  scrollToBottom();
-
+function playCurrentMusic() {
+    if (backgroundMusicPlayer.src) {
+        backgroundMusicPlayer.volume = 0.1;
+        backgroundMusicPlayer.play().catch(e => console.error("Failed to play music:", e));
+    }
 }
 
+function pauseCurrentMusic() {
+    backgroundMusicPlayer.pause();
+}
 
+function stopCurrentMusic() {
+    backgroundMusicPlayer.pause();
+    backgroundMusicPlayer.currentTime = 0;
+}
 
-const typingUsers = new Set();
-const typingNotificationArea = document.getElementById("typing-notification");
-
-
-
-typingRef.on('child_added', function(snapshot) {
-    const typingUsername = snapshot.key;
-    if (typingUsername !== username) {
-        typingUsers.add(typingUsername);
-
-    }
-
-    updateTypingNotificationDisplay();
-
-});
-
-
-
-typingRef.on('child_removed', function(snapshot) {
-    const typingUsername = snapshot.key;
-    typingUsers.delete(typingUsername);
-    updateTypingNotificationDisplay();
-
-});
-
-
-
-function updateTypingNotificationDisplay() {
-    if (typingUsers.size === 0) {
-        typingNotificationArea.innerHTML = "";
-    } else if (typingUsers.size === 1) {
-        typingNotificationArea.innerHTML = `<small>${Array.from(typingUsers)[0]} is typing...</small>`;
-    } else {
-        const usersArray = Array.from(typingUsers);
-        const lastUser = usersArray.pop();
-        if (usersArray.length === 0) {
-             typingNotificationArea.innerHTML = `<small>${lastUser} is typing...</small>`;
-        } else {
-            typingNotificationArea.innerHTML = `<small>${usersArray.join(', ')} and ${lastUser} are typing...</small>`;
-
-        }
-    }
-    }
+function play() {
+  var audio = document.getElementById("audio");
+  audio.play();
+          }
