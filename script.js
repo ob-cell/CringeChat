@@ -128,19 +128,90 @@ const customEmojiMap = {
 
   }
 
-const connectedRef = firebase.database().ref('.info/connected');
-const presenceRef = firebase.database().ref('presence');
-const onlineUsersDisplay = document.getElementById('online-users');
+const typingRef = firebase.database().ref('typing');
 
-connectedRef.on('value', function(snapshot) {
-    if (snapshot.val() === true) {
-        const userRef = presenceRef.child(username);
-        userRef.onDisconnect().remove();
-        userRef.set(true);
+let typingTimeout;
+
+
+
+document.getElementById("chat-txt").addEventListener("input", () => {
+
+    typingRef.child(username).set(true);
+
+    clearTimeout(typingTimeout);
+
+    typingTimeout = setTimeout(() => {
+
+        typingRef.child(username).remove();
+
+    }, 2000);
+
+});
+
+
+
+function postChat(e) {
+  e.preventDefault();
+  const timestamp = Date.now();
+  const chatTxt = document.getElementById("chat-txt");
+  const message = chatTxt.value;
+  chatTxt.value = "";
+
+
+
+  clearTimeout(typingTimeout);
+  typingRef.child(username).remove();
+
+
+
+  usernames.clear();
+  updateTypingNotificationDisplay();
+  scrollToBottom();
+
+}
+
+
+
+const typingUsers = new Set();
+const typingNotificationArea = document.getElementById("typing-notification");
+
+
+
+typingRef.on('child_added', function(snapshot) {
+    const typingUsername = snapshot.key;
+    if (typingUsername !== username) {
+        typingUsers.add(typingUsername);
+
     }
+
+    updateTypingNotificationDisplay();
+
 });
 
-onlineUsersRef.on('value', function(snapshot) {
-    const onlineCount = snapshot.numChildren();
-    onlineUsersDisplay.textContent = `Online: ${onlineCount}`;
+
+
+typingRef.on('child_removed', function(snapshot) {
+    const typingUsername = snapshot.key;
+    typingUsers.delete(typingUsername);
+    updateTypingNotificationDisplay();
+
 });
+
+
+
+function updateTypingNotificationDisplay() {
+    if (typingUsers.size === 0) {
+        typingNotificationArea.innerHTML = "";
+    } else if (typingUsers.size === 1) {
+        typingNotificationArea.innerHTML = `<small>${Array.from(typingUsers)[0]} is typing...</small>`;
+    } else {
+        const usersArray = Array.from(typingUsers);
+        const lastUser = usersArray.pop();
+        if (usersArray.length === 0) {
+             typingNotificationArea.innerHTML = `<small>${lastUser} is typing...</small>`;
+        } else {
+            typingNotificationArea.innerHTML = `<small>${usersArray.join(', ')} and ${lastUser} are typing...</small>`;
+
+        }
+    }
+  }
