@@ -30,32 +30,48 @@ if (!randomColor) {
 const coloredUsernameHtml = `<span style="color:${randomColor}">${username}</span>`;
 
 const typingRef = firebase.database().ref('typing');
-// Reference for online users
 const usersRef = firebase.database().ref('users');
 
 const typingNotificationArea = document.getElementById("typing-notification");
 const backgroundMusicPlayer = document.getElementById("background-music-player");
 const musicSelector = document.getElementById("music-selector");
-// New audio element for join sound
+
 const joinSound = new Audio('sound/buddyin.mp3');
+const leaveSound = new Audio('sound/buddyout.mp3');
 
 let typingTimeout;
 let messageSendTimeout;
 
-// Set user as online and handle disconnect
 const userOnlineRef = usersRef.child(username);
-userOnlineRef.set(true); // Set user as online when they join
-userOnlineRef.onDisconnect().remove(); // Remove user from 'users' when they disconnect
 
-// Listen for new users joining
+userOnlineRef.set(true);
+
+userOnlineRef.onDisconnect().remove();
+userOnlineRef.onDisconnect().set(null).then(() => {
+}).catch(error => {
+    console.error("Error setting onDisconnect for user:", error);
+});
+
+
 usersRef.on('child_added', function(snapshot) {
     const joinedUsername = snapshot.key;
-    if (joinedUsername !== username) { // Don't notify for self-join
+    if (joinedUsername !== username) {
         const timestamp = Date.now();
         db.ref("messages/" + timestamp).set({
             msg: `<span style="color:green">${joinedUsername} joined the chat</span>`
         });
         joinSound.play().catch(e => console.error("Failed to play join sound:", e));
+    }
+});
+
+usersRef.on('child_removed', function(snapshot) {
+    const leftUsername = snapshot.key;
+    if (leftUsername !== username) {
+        const timestamp = Date.now();
+        db.ref("messages/" + timestamp).set({
+            msg: `<span style="color:red">${leftUsername} left the chat</span>`
+        });
+        leaveSound.play().catch(e => console.error("Failed to play leave sound:", e));
     }
 });
 
@@ -150,8 +166,13 @@ function postChat(e) {
 const fetchChat = db.ref("messages/");
 fetchChat.on("child_added", function (snapshot) {
     const messages = snapshot.val();
-    const msg = `<li>${messages.usr} : ${messages.msg}</li>`;
-    document.getElementById("messages").innerHTML += msg;
+    let msgContent = '';
+    if (messages.usr) {
+        msgContent = `<li>${messages.usr} : ${messages.msg}</li>`;
+    } else {
+        msgContent = `<li>${messages.msg}</li>`;
+    }
+    document.getElementById("messages").innerHTML += msgContent;
     scrollToBottom();
 });
 
