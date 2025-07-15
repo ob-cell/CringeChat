@@ -172,66 +172,32 @@ function postChat(e) {
 
 
 
-const typingRef = firebase.database().ref('typing');
-let typingTimeout;
-let messageSendTimeout;
-
-document.getElementById("chat-txt").addEventListener("input", () => {
-    typingRef.child(username).set(true);
-    clearTimeout(typingTimeout);
-    clearTimeout(messageSendTimeout);
-
-    typingTimeout = setTimeout(() => {
-        typingRef.child(username).remove();
-    }, 2000);
-
-    messageSendTimeout = setTimeout(() => {
-        const chatTxtElement = document.getElementById("chat-txt");
-        if (chatTxtElement.value.trim() !== "") {
-            postChat({ preventDefault: () => {} });
-        }
-    }, 10000);
-});
-
-function postChat(e) {
-  e.preventDefault();
-
-  clearTimeout(typingTimeout);
-  clearTimeout(messageSendTimeout);
-
-  const chatTxt = document.getElementById("chat-txt");
-  typingRef.child(username).remove();
-
-  
-  if (chatTxt.value.trim() !== "") {
-      const timestamp = Date.now();
-      db.ref("messages/" + timestamp).set({
-          usr: coloredUsernameHtml,
-          msg: chatTxt.value,
-      });
-      chatTxt.value = "";
-      scrollToBottom();
-  }
-
-  updateTypingNotificationDisplay();
-}
-
 const typingUsers = new Set();
 const typingNotificationArea = document.getElementById("typing-notification");
+
+
 
 typingRef.on('child_added', function(snapshot) {
     const typingUsername = snapshot.key;
     if (typingUsername !== username) {
         typingUsers.add(typingUsername);
+
     }
+
     updateTypingNotificationDisplay();
+
 });
+
+
 
 typingRef.on('child_removed', function(snapshot) {
     const typingUsername = snapshot.key;
     typingUsers.delete(typingUsername);
     updateTypingNotificationDisplay();
+
 });
+
+
 
 function updateTypingNotificationDisplay() {
     if (typingUsers.size === 0) {
@@ -245,6 +211,7 @@ function updateTypingNotificationDisplay() {
              typingNotificationArea.innerHTML = `<small>${lastUser} is typing...</small>`;
         } else {
             typingNotificationArea.innerHTML = `<small>${usersArray.join(', ')} and ${lastUser} are typing...</small>`;
+
         }
     }
-                     }
+    }
