@@ -1,0 +1,10 @@
+.chat {
+  height: 400px; 
+  overflow-y: auto;
+}
+
+#messages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
